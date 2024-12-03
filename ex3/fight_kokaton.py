@@ -157,9 +157,10 @@ class Bomb:
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
-    screen = pg.display.set_mode((WIDTH, HEIGHT))    
+    screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
+<<<<<<< HEAD
     bomb = Bomb((255, 0, 0), 10)
     beam = None  # Beam(bird)  # ビームインスタンス生成
     # bomb2 = Bomb((0, 0, 255), 20)   
@@ -168,31 +169,52 @@ def main():
     clock = pg.time.Clock()
     tmr = 0
     
+=======
+    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    score = Score()
+    clock = pg.time.Clock()
+    tmr = 0
+    beams = []  # List to store multiple beam instances
+
+>>>>>>> multibeam
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beams.append(Beam(bird))  # Add a new beam instance to the list
+
         screen.blit(bg_img, [0, 0])
+<<<<<<< HEAD
         
+=======
+
+        # Collision detection for bird and bombs
+>>>>>>> multibeam
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
-                # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
                 bird.change_img(8, screen)
                 pg.display.update()
                 time.sleep(1)
                 return
 
+<<<<<<< HEAD
+=======
+        # Update and check collision for each beam
+        for beam in beams:
+            beam.update(screen)
+        beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]  # Remove out-of-bound beams
+        
+>>>>>>> multibeam
         for i, bomb in enumerate(bombs):
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct):  # ビームが爆弾を撃ち落としたら
-                    beam = None
+            for beam in beams:
+                if beam.rct.colliderect(bomb.rct):  # Beam hits bomb
+                    beams.remove(beam)
                     bombs[i] = None
                     bird.change_img(6, screen)
                     score.score += 1
                     pg.display.update()
+<<<<<<< HEAD
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -205,10 +227,22 @@ def main():
 
         # bomb2.update(screen)
         score.update(screen)
+=======
+
+        # Remove destroyed bombs
+        bombs = [bomb for bomb in bombs if bomb is not None]
+
+        key_lst = pg.key.get_pressed()
+        bird.update(key_lst, screen)
+
+        for bomb in bombs:
+            bomb.update(screen)
+        score.update(screen)
+
+>>>>>>> multibeam
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 if __name__ == "__main__":
     pg.init()
