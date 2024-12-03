@@ -154,29 +154,47 @@ class Bomb:
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
 
+class Explosion:
+    """
+    爆発エフェクトを管理するクラス
+    """
+    def __init__(self, center: tuple[int, int]):
+        """
+        爆発エフェクトを初期化する。
+        引数 center: 爆発位置の座標
+        """
+        self.images = [
+            pg.image.load("fig/explosion.gif"),  # 元の画像
+            pg.transform.flip(pg.image.load("fig/explosion.gif"), True, False)  # 上下反転
+        ]
+        self.rct = self.images[0].get_rect()
+        self.rct.center = center  # 爆発位置を設定
+        self.life = 20  # 爆発の表示時間（フレーム数）
+        self.image_index = 0  # 表示する画像のインデックス
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発エフェクトを描画し、時間経過を処理する。
+        引数 screen: 描画先のSurface
+        """
+        if self.life > 0:
+            self.image_index = (self.image_index + 1) % 2  # 画像を切り替える
+            screen.blit(self.images[self.image_index], self.rct)
+            self.life -= 1  # 残り時間を減らす
+
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
-<<<<<<< HEAD
-    bomb = Bomb((255, 0, 0), 10)
-    beam = None  # Beam(bird)  # ビームインスタンス生成
-    # bomb2 = Bomb((0, 0, 255), 20)   
-    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)] 
-    score = Score()
-    clock = pg.time.Clock()
-    tmr = 0
-    
-=======
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    explosions = []  # 爆発エフェクトを管理するリスト
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
     beams = []  # List to store multiple beam instances
 
->>>>>>> multibeam
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -185,61 +203,41 @@ def main():
                 beams.append(Beam(bird))  # Add a new beam instance to the list
 
         screen.blit(bg_img, [0, 0])
-<<<<<<< HEAD
-        
-=======
 
         # Collision detection for bird and bombs
->>>>>>> multibeam
-        for bomb in bombs:
+        for bomb in bombs[:]:  # [:]でコピーを作成してループ
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
                 pg.display.update()
                 time.sleep(1)
                 return
 
-<<<<<<< HEAD
-=======
-        # Update and check collision for each beam
+        
         for beam in beams:
             beam.update(screen)
         beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]  # Remove out-of-bound beams
-        
->>>>>>> multibeam
-        for i, bomb in enumerate(bombs):
-            for beam in beams:
-                if beam.rct.colliderect(bomb.rct):  # Beam hits bomb
-                    beams.remove(beam)
-                    bombs[i] = None
-                    bird.change_img(6, screen)
-                    score.score += 1
-                    pg.display.update()
-<<<<<<< HEAD
 
-        key_lst = pg.key.get_pressed()
-        bird.update(key_lst, screen)
-        # beam.update(screen)
-        bombs = [bomb for bomb in bombs if bomb is not None]  # Noneでないものリスト
-        for bomb in bombs:
-            bomb.update(screen)
-        if beam is not None:
-            beam.update(screen)
-
-        # bomb2.update(screen)
-        score.update(screen)
-=======
-
-        # Remove destroyed bombs
-        bombs = [bomb for bomb in bombs if bomb is not None]
-
+        for bomb in bombs[:]:  # [:]でコピーを作成してループ
+            for beam in beams[:]:  # beamsもコピーを作成
+                 if beam.rct.colliderect(bomb.rct):  # Beam hits bomb
+                     if bomb in bombs:  # bombsに存在するか確認
+                        bombs.remove(bomb)  # 爆弾をリストから削除
+                     if beam in beams:  # beamsに存在するか確認
+                        beams.remove(beam)  # ビームをリストから削除
+                     bird.change_img(6, screen)
+                     score.score += 1
+                     explosions.append(Explosion(bomb.rct.center))  # 爆発エフェクトを生成
+                     break  # 内側のループを抜ける
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
 
         for bomb in bombs:
-            bomb.update(screen)
+            bomb.update(screen) 
+
+        # 爆発エフェクトの更新
+        explosions = [explosion for explosion in explosions if explosion.update(screen)]
         score.update(screen)
 
->>>>>>> multibeam
         pg.display.update()
         tmr += 1
         clock.tick(50)
